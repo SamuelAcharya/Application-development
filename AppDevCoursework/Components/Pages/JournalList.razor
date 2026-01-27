@@ -2,6 +2,8 @@
 @using AppDevCoursework.Data
 @inject DatabaseService DatabaseService
 @inject NavigationManager NavigationManager
+@inject AppDevCoursework.Services.PdfExportService PdfExportService
+@inject IJSRuntime JSRuntime
 
 <div class="container my-4">
     <div class="row mb-3">
@@ -16,7 +18,7 @@
     </div>
 
     <!-- Search and Filter Section -->
-    <div class="row g-2 mb-4 align-items-end p-3 rounded shadow-sm" style="background-color: var(--bg-filter); border: 1px solid var(--border-neutral);">
+    <div class="row g-2 mb-3 align-items-end p-3 rounded shadow-sm" style="background-color: var(--bg-filter); border: 1px solid var(--border-neutral);">
         <div class="col-md-3">
             <label class="form-label small text-muted">Search</label>
             <input type="text" class="form-control form-control-sm" placeholder="Title/Content..." @bind="searchText" @bind:event="oninput" @onkeyup="HandleSearchEnter" />
@@ -42,6 +44,36 @@
         <div class="col-md-3 d-flex gap-2">
             <button class="btn btn-primary btn-sm flex-grow-1" @onclick="Search">Filter</button>
             <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">Clear</button>
+        </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="row g-2 mb-4 align-items-end p-3 rounded shadow-sm" style="background-color: var(--bg-filter); border: 1px solid var(--border-neutral);">
+        <div class="col-md-3">
+            <label class="form-label small text-muted">Export start date</label>
+            <input type="date" class="form-control form-control-sm" @bind="exportStartDate" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-muted">Export end date</label>
+            <input type="date" class="form-control form-control-sm" @bind="exportEndDate" />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm flex-grow-1" @onclick="ExportPdf" disabled="@isExporting">
+                @if (isExporting)
+                {
+                    <span>Exporting...</span>
+                }
+                else
+                {
+                    <span>Export as PDF</span>
+                }
+            </button>
+        </div>
+        <div class="col-md-3">
+            @if (!string.IsNullOrEmpty(exportStatusMessage))
+            {
+                <div class="small @(exportHasError ? "text-danger" : "text-muted")">@exportStatusMessage</div>
+            }
         </div>
     </div>
 
@@ -130,6 +162,13 @@
     private DateTime? filterDate;
     private string filterMood = "";
     private string filterTag = "";
+
+    // Export
+    private DateTime? exportStartDate;
+    private DateTime? exportEndDate;
+    private bool isExporting = false;
+    private string? exportStatusMessage;
+    private bool exportHasError;
     
     private List<Tag> availableTags = new();
     private List<string> availableMoods = new() { 
@@ -217,5 +256,55 @@
     {
         if (string.IsNullOrEmpty(htmlContent)) return string.Empty;
         return System.Text.RegularExpressions.Regex.Replace(htmlContent, "<.*?>", string.Empty);
+    }
+
+    private async Task ExportPdf()
+    {
+        exportStatusMessage = string.Empty;
+        exportHasError = false;
+
+        if (!exportStartDate.HasValue || !exportEndDate.HasValue)
+        {
+            exportStatusMessage = "Please select both a start and end date.";
+            exportHasError = true;
+            return;
+        }
+
+        if (exportEndDate.Value < exportStartDate.Value)
+        {
+            exportStatusMessage = "End date must be on or after start date.";
+            exportHasError = true;
+            return;
+        }
+
+        isExporting = true;
+
+        try
+        {
+            var bytes = await PdfExportService.ExportJournalEntriesAsync(exportStartDate.Value, exportEndDate.Value);
+
+            if (bytes == null || bytes.Length == 0)
+            {
+                exportStatusMessage = "No entries found in the selected date range.";
+                exportHasError = false;
+                return;
+            }
+
+            var fileName = $"journal-export-{exportStartDate:yyyyMMdd}-{exportEndDate:yyyyMMdd}.pdf";
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", fileName, "application/pdf", bytes);
+
+            exportStatusMessage = "PDF exported successfully.";
+            exportHasError = false;
+        }
+        catch (Exception ex)
+        {
+            exportStatusMessage = "Failed to export PDF.";
+            exportHasError = true;
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            isExporting = false;
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace AppDevCoursework
 {
@@ -22,6 +22,7 @@ namespace AppDevCoursework
 #endif
             builder.Services.AddSingleton<Data.DatabaseService>();
             builder.Services.AddSingleton<Services.ThemeService>();
+            builder.Services.AddSingleton<Services.PdfExportService>();
 
             return builder.Build();
         }

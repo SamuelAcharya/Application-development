@@ -333,6 +333,19 @@ namespace AppDevCoursework.Data
             return stats;
         }
 
+        public async Task<List<JournalEntry>> GetEntriesInRangeAsync(DateTime start, DateTime end)
+        {
+            await InitAsync();
+
+            var startDate = start.Date;
+            var endDate = end.Date.AddDays(1).AddTicks(-1);
+
+            return await _database.Table<JournalEntry>()
+                                  .Where(e => e.EntryDate >= startDate && e.EntryDate <= endDate)
+                                  .OrderBy(e => e.EntryDate)
+                                  .ToListAsync();
+        }
+
         private int CountWords(string content)
         {
             if (string.IsNullOrWhiteSpace(content)) return 0;

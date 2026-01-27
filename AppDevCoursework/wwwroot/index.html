@@ -25,6 +25,31 @@
 
     <script src="_framework/blazor.webview.js" autostart="false"></script>
 
+    <script>
+        // Trigger a file download from a byte array provided by Blazor
+        window.downloadFileFromBytes = (fileName, contentType, bytes) => {
+            try {
+                if (!bytes || bytes.length === 0) {
+                    return;
+                }
+
+                const blob = new Blob([new Uint8Array(bytes)], { type: contentType });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName || 'download.bin';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('Failed to download file', e);
+            }
+        };
+    </script>
+
 </body>
 
 </html>
