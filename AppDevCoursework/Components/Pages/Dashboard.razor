@@ -1,0 +1,180 @@
+@page "/dashboard"
+@using AppDevCoursework.Data
+@inject DatabaseService DbService
+
+<div class="container mt-4 mb-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="display-6">Analytics Overview</h1>
+        </div>
+        <div class="col-auto">
+            <div class="d-flex gap-2">
+                <input type="date" class="form-control form-control-sm" @bind="StartDate" />
+                <input type="date" class="form-control form-control-sm" @bind="EndDate" />
+                <button class="btn btn-primary btn-sm" @onclick="RefreshStats">Filter</button>
+            </div>
+        </div>
+    </div>
+
+    @if (Stats == null)
+    {
+        <div class="text-center p-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else if (Stats.TotalEntries == 0)
+    {
+        <div class="alert alert-info text-center">
+            No entries found in this date range. Start journaling to see your stats!
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-theme-card border rounded shadow-sm text-center">
+                    <div class="text-muted small">Current Streak</div>
+                    <div class="h4 fw-bold mb-0">@Stats.CurrentStreak</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-theme-card border rounded shadow-sm text-center">
+                    <div class="text-muted small">Longest Streak</div>
+                    <div class="h4 fw-bold mb-0">@Stats.LongestStreak</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-theme-card border rounded shadow-sm text-center">
+                    <div class="text-muted small">Total Entries</div>
+                    <div class="h4 fw-bold mb-0">@Stats.TotalEntries</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-theme-card border rounded shadow-sm text-center">
+                    <div class="text-muted small">Top Mood</div>
+                    <div class="h4 fw-bold mb-0 text-truncate px-1">@Stats.MostFrequentMood</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Mood Dist -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-0 fw-bold">Mood Distribution</div>
+                    <div class="card-body">
+                        @{
+                            var pos = Stats.MoodDistribution.GetValueOrDefault("Positive");
+                            var neu = Stats.MoodDistribution.GetValueOrDefault("Neutral");
+                            var neg = Stats.MoodDistribution.GetValueOrDefault("Negative");
+                        }
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Positive Moods</span>
+                                <span>@pos (@(GetPercent(pos, 0))%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: @(GetPercent(pos, 0))%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Neutral Moods</span>
+                                <span>@neu (@(GetPercent(neu, 0))%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: @(GetPercent(neu, 0))%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Negative Moods</span>
+                                <span>@neg (@(GetPercent(neg, 0))%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" style="width: @(GetPercent(neg, 0))%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-0 fw-bold">Category Breakdown</div>
+                    <div class="card-body scroll-pane" style="max-height: 200px; overflow-y: auto;">
+                        @foreach(var cat in Stats.CategoryBreakdown.OrderByDescending(x => x.Value))
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-theme-neutral border">@cat.Key</span>
+                                <span class="small">@cat.Value entries</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Tags -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-0 fw-bold">Most Used Tags</div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var tag in Stats.TopTags)
+                            {
+                                <span class="badge rounded-pill bg-primary px-3 py-2">
+                                    #@tag.Key <span class="ms-1 small">(@tag.Value)</span>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Word Trends -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent border-0 fw-bold">Recent Word Counts</div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach(var trend in Stats.WordCountTrends.TakeLast(5).Reverse())
+                            {
+                                <li class="list-group-item d-flex justify-content-between small">
+                                    <span>@trend.Key.ToString("MMM dd")</span>
+                                    <span class="fw-bold">@trend.Value words</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DateTime StartDate = DateTime.Today.AddDays(-30);
+    private DateTime EndDate = DateTime.Today;
+    private DashboardStats? Stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStats();
+    }
+
+    private async Task RefreshStats()
+    {
+        Stats = null;
+        Stats = await DbService.GetDashboardStatsAsync(StartDate, EndDate);
+    }
+
+    private int GetPercent(int value, int decimals)
+    {
+        if (Stats == null || Stats.TotalEntries == 0) return 0;
+        return (int)Math.Round((double)value * 100 / Stats.TotalEntries);
+    }
+}

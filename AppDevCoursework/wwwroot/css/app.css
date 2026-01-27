@@ -25,6 +25,7 @@
     --bg-danger-hover: #4805ad;
     --text-danger: white;
     --text-on-primary: white;
+    color-scheme: light;
 }
 
 [data-theme="dark"] {
@@ -50,6 +51,7 @@
     --bg-danger-hover: #5400d2;
     --text-danger: white;
     --text-on-primary: black;
+    color-scheme: dark;
 }
 
 html,
@@ -213,6 +215,62 @@ a {
     color: var(--color-card-header);
     font-weight: bold;
     border-bottom: 1px solid var(--border-card);
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    background-color: var(--bg-card);
+    color: var(--text-body);
+    border-color: var(--border-card);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg-card);
+    color: var(--text-body);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem rgba(46, 88, 52, 0.25);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: #888;
+}
+
+/* Tables */
+.table {
+    color: var(--text-body);
+}
+
+.table-bordered {
+    border-color: var(--border-neutral);
+}
+
+.table thead {
+    background-color: var(--bg-card-header);
+    color: var(--color-card-header);
+}
+
+[data-theme="dark"] .table {
+    --bs-table-bg: var(--bg-card);
+    --bs-table-color: var(--text-body);
+    --bs-table-border-color: var(--border-neutral);
+}
+
+[data-theme="dark"] .table-light {
+    --bs-table-bg: var(--bg-neutral);
+    --bs-table-color: var(--text-body);
+}
+
+/* Custom Background Helpers to follow theme */
+.bg-theme-card {
+    background-color: var(--bg-card) !important;
+    color: var(--text-body) !important;
+}
+
+.bg-theme-neutral {
+    background-color: var(--bg-neutral) !important;
+    color: var(--text-body) !important;
 }
 
 /* Blazor Error UI */

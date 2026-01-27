@@ -61,7 +61,17 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-3">
+                                <label>Category:</label>
+                                <select class="form-select" @bind="CurrentEntry.Category">
+                                    <option value="">Select Category</option>
+                                    @foreach (var cat in Categories)
+                                    {
+                                        <option value="@cat">@cat</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-12">
                                 <label>Secondary Moods (Optional, Max 2):</label>
                                 <div>
                                     @foreach (var mood in AllMoods)
@@ -181,6 +191,10 @@
             "Happy", "Nostalgic", "Stressed", "Confident", "Bored",
             "Relaxed", "Anxious", "Thoughtful", "Sad", "Excited"
         };
+
+    private List<string> Categories = new() {
+        "Work", "Health", "Travel", "Fitness", "Personal", "Social", "Other"
+    };
 
     private HashSet<string> SelectedSecondaryMoods = new();
 

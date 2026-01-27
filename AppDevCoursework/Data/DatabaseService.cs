@@ -242,6 +242,103 @@ namespace AppDevCoursework.Data
                 TotalEntries = totalEntries
             };
         }
+
+        public async Task<DashboardStats> GetDashboardStatsAsync(DateTime start, DateTime end)
+        {
+            await InitAsync();
+            var allEntries = await _database.Table<JournalEntry>()
+                                          .Where(e => e.EntryDate >= start && e.EntryDate <= end)
+                                          .ToListAsync();
+
+            var stats = new DashboardStats
+            {
+                TotalEntries = allEntries.Count
+            };
+
+            // Streak Info
+            var streakStats = await GetStreakStatsAsync();
+            stats.CurrentStreak = streakStats.CurrentStreak;
+            stats.LongestStreak = streakStats.LongestStreak;
+
+            if (allEntries.Any())
+            {
+                // Mood Distribution
+                var positiveMoods = new HashSet<string> { "Happy", "Excited", "Relaxed", "Grateful", "Confident" };
+                var neutralMoods = new HashSet<string> { "Calm", "Thoughtful", "Curious", "Nostalgic", "Bored" };
+                var negativeMoods = new HashSet<string> { "Sad", "Angry", "Stressed", "Lonely", "Anxious" };
+
+                int pos = 0, neu = 0, neg = 0;
+                var moodCounts = new Dictionary<string, int>();
+
+                foreach (var entry in allEntries)
+                {
+                    if (positiveMoods.Contains(entry.PrimaryMood)) pos++;
+                    else if (neutralMoods.Contains(entry.PrimaryMood)) neu++;
+                    else if (negativeMoods.Contains(entry.PrimaryMood)) neg++;
+
+                    if (!string.IsNullOrEmpty(entry.PrimaryMood))
+                    {
+                        moodCounts[entry.PrimaryMood] = moodCounts.GetValueOrDefault(entry.PrimaryMood) + 1;
+                    }
+                }
+
+                stats.MoodDistribution["Positive"] = pos;
+                stats.MoodDistribution["Neutral"] = neu;
+                stats.MoodDistribution["Negative"] = neg;
+
+                stats.MostFrequentMood = moodCounts.OrderByDescending(x => x.Value).FirstOrDefault().Key ?? "None";
+
+                // Tags
+                var tagCounts = new Dictionary<string, int>();
+                foreach (var entry in allEntries)
+                {
+                    if (!string.IsNullOrEmpty(entry.Tags))
+                    {
+                        foreach (var tag in entry.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            var t = tag.Trim();
+                            tagCounts[t] = tagCounts.GetValueOrDefault(t) + 1;
+                        }
+                    }
+                }
+                stats.TopTags = tagCounts.OrderByDescending(x => x.Value).Take(5).ToList();
+
+                // Category Breakdown
+                var catCounts = new Dictionary<string, int>();
+                foreach (var entry in allEntries)
+                {
+                    if (!string.IsNullOrEmpty(entry.Category))
+                    {
+                        catCounts[entry.Category] = catCounts.GetValueOrDefault(entry.Category) + 1;
+                    }
+                }
+                stats.CategoryBreakdown = catCounts;
+
+                // Word Count Trends
+                stats.WordCountTrends = allEntries.OrderBy(e => e.EntryDate)
+                                                .Select(e => new KeyValuePair<DateTime, int>(e.EntryDate.Date, CountWords(e.Content)))
+                                                .ToList();
+                
+                // Missed Days
+                var dateSet = new HashSet<DateTime>(allEntries.Select(e => e.EntryDate.Date));
+                for (var dt = start.Date; dt <= end.Date; dt = dt.AddDays(1))
+                {
+                    if (!dateSet.Contains(dt) && dt < DateTime.Today)
+                    {
+                        stats.MissedDays.Add(dt);
+                    }
+                }
+            }
+
+            return stats;
+        }
+
+        private int CountWords(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content)) return 0;
+            var plainText = System.Text.RegularExpressions.Regex.Replace(content, "<.*?>", string.Empty);
+            return plainText.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
+        }
     }
 
     public class StreakStats
@@ -249,5 +346,21 @@ namespace AppDevCoursework.Data
         public int CurrentStreak { get; set; }
         public int LongestStreak { get; set; }
         public int TotalEntries { get; set; }
+    }
+
+    public class DashboardStats
+    {
+        public int TotalEntries { get; set; }
+        public int CurrentStreak { get; set; }
+        public int LongestStreak { get; set; }
+        public List<DateTime> MissedDays { get; set; } = new();
+
+        public Dictionary<string, int> MoodDistribution { get; set; } = new();
+        public string MostFrequentMood { get; set; } = "None";
+        
+        public List<KeyValuePair<string, int>> TopTags { get; set; } = new();
+        public Dictionary<string, int> CategoryBreakdown { get; set; } = new();
+        
+        public List<KeyValuePair<DateTime, int>> WordCountTrends { get; set; } = new();
     }
 }

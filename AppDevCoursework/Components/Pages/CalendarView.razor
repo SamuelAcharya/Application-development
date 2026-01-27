@@ -16,8 +16,8 @@
     }
     else
     {
-        <table class="table table-bordered text-center">
-            <thead class="table-light">
+        <table class="table table-bordered text-center shadow-sm">
+            <thead>
                 <tr>
                     <th>Sun</th>
                     <th>Mon</th>
@@ -56,14 +56,17 @@
                                     var entryExists = MonthEntries.Any(e => e.EntryDate.Date == currentDayDate.Date);
                                     var isToday = currentDayDate.Date == DateTime.Today;
 
-                                    <td style="@(isToday ? "background-color: #e0f7fa;" : "") cursor: pointer;" 
+                                    <td class="@(isToday ? "bg-theme-neutral border-primary" : "")" 
+                                        style="cursor: pointer; position: relative; min-height: 80px;" 
                                         @onclick="() => OpenEntry(currentDayDate)">
                                         
-                                        <div>@dayCounter</div>
+                                        <div class="fw-bold">@dayCounter</div>
                                         
                                         @if (entryExists)
                                         {
-                                            <span class="badge bg-success" style="font-size: 0.6rem;">Entry</span>
+                                            <div class="mt-1">
+                                                <span class="badge bg-success" style="font-size: 0.6rem;">Entry</span>
+                                            </div>
                                         }
                                     </td>
                                     
