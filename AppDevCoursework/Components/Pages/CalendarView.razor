@@ -1,0 +1,123 @@
+@page "/calendar"
+@using AppDevCoursework.Data
+@inject DatabaseService DbService
+@inject NavigationManager NavManager
+
+<div class="container mt-4">
+    <div class="text-center mb-3">
+        <button class="btn btn-secondary btn-sm" @onclick="PrevMonth">Previous</button>
+        <span class="mx-3 fw-bold fs-4">@CurrentData.ToString("MMMM yyyy")</span>
+        <button class="btn btn-secondary btn-sm" @onclick="NextMonth">Next</button>
+    </div>
+
+    @if (IsLoading)
+    {
+        <p class="text-center">Loading calendar...</p>
+    }
+    else
+    {
+        <table class="table table-bordered text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    // Calculate empty slots before the 1st of the month
+                    var firstDay = new DateTime(CurrentData.Year, CurrentData.Month, 1);
+                    int startDayOfWeek = (int)firstDay.DayOfWeek; // 0 for Sunday
+                    int daysInMonth = DateTime.DaysInMonth(CurrentData.Year, CurrentData.Month);
+                    int dayCounter = 1;
+
+                    // Simple loop forrows (max 6 weeks)
+                    for (int row = 0; row < 6; row++)
+                    {
+                        <tr>
+                            @for (int col = 0; col < 7; col++)
+                            {
+                                if (row == 0 && col < startDayOfWeek)
+                                {
+                                    // Empty cells before 1st day
+                                    <td></td>
+                                }
+                                else if (dayCounter <= daysInMonth)
+                                {
+                                    var currentDayDate = new DateTime(CurrentData.Year, CurrentData.Month, dayCounter);
+                                    
+                                    // Check if we have an entry for this day
+                                    // Simple check: do we have any entry in our list with this Date?
+                                    var entryExists = MonthEntries.Any(e => e.EntryDate.Date == currentDayDate.Date);
+                                    var isToday = currentDayDate.Date == DateTime.Today;
+
+                                    <td style="@(isToday ? "background-color: #e0f7fa;" : "") cursor: pointer;" 
+                                        @onclick="() => OpenEntry(currentDayDate)">
+                                        
+                                        <div>@dayCounter</div>
+                                        
+                                        @if (entryExists)
+                                        {
+                                            <span class="badge bg-success" style="font-size: 0.6rem;">Entry</span>
+                                        }
+                                    </td>
+                                    
+                                    dayCounter++;
+                                }
+                                else
+                                {
+                                    // Empty cells after last day
+                                    <td></td>
+                                }
+                            }
+                        </tr>
+                        if (dayCounter > daysInMonth) break;
+                    }
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private DateTime CurrentData = DateTime.Today;
+    private List<JournalEntry> MonthEntries = new();
+    private bool IsLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        // Simple call to fetch data
+        MonthEntries = await DbService.GetEntriesForMonthAsync(CurrentData);
+        IsLoading = false;
+    }
+
+    private async Task PrevMonth()
+    {
+        // Safe navigation using C# built-in AddMonths
+        CurrentData = CurrentData.AddMonths(-1);
+        await LoadData();
+    }
+
+    private async Task NextMonth()
+    {
+        CurrentData = CurrentData.AddMonths(1);
+        await LoadData();
+    }
+
+    private void OpenEntry(DateTime date)
+    {
+        // Navigate to home with the date parameter
+        NavManager.NavigateTo($"/?date={date.ToString("yyyy-MM-dd")}");
+    }
+}

@@ -94,5 +94,17 @@ namespace AppDevCoursework.Data
             await InitAsync();
             return await _database.InsertAsync(tag);
         }
+
+        // Simple method to get all entries for a specific month
+        public async Task<List<JournalEntry>> GetEntriesForMonthAsync(DateTime monthDate)
+        {
+            await InitAsync();
+            var start = new DateTime(monthDate.Year, monthDate.Month, 1);
+            var end = start.AddMonths(1).AddTicks(-1);
+
+            return await _database.Table<JournalEntry>()
+                            .Where(e => e.EntryDate >= start && e.EntryDate <= end)
+                            .ToListAsync();
+        }
     }
 }

@@ -149,6 +149,9 @@
 @inject IJSRuntime JSRuntime
 
 @code {
+    [SupplyParameterFromQuery(Name = "date")]
+    private string? DateQuery { get; set; }
+
     private DateTime CurrentDate = DateTime.Today;
     private JournalEntry CurrentEntry = new();
     private bool IsLoading = true;
@@ -172,6 +175,12 @@
     protected override async Task OnInitializedAsync()
     {
         SuggestedTags = await DbService.GetTagsAsync();
+        
+        if (!string.IsNullOrEmpty(DateQuery) && DateTime.TryParse(DateQuery, out DateTime parsedDate))
+        {
+            CurrentDate = parsedDate;
+        }
+
         await LoadEntryAsync();
     }
 
