@@ -107,20 +107,67 @@ namespace AppDevCoursework.Data
                             .ToListAsync();
         }
 
-        public async Task<List<JournalEntry>> GetJournalEntriesAsync(int skip, int take)
+        public async Task<List<JournalEntry>> GetJournalEntriesAsync(string searchText, DateTime? date, string mood, string tag, int skip, int take)
         {
             await InitAsync();
-            return await _database.Table<JournalEntry>()
-                            .OrderByDescending(e => e.EntryDate)
+            var query = _database.Table<JournalEntry>();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                query = query.Where(e => e.Title.Contains(searchText) || e.Content.Contains(searchText));
+            }
+
+            if (date.HasValue)
+            {
+                var start = date.Value.Date;
+                var end = start.AddDays(1).AddTicks(-1);
+                query = query.Where(e => e.EntryDate >= start && e.EntryDate <= end);
+            }
+
+            if (!string.IsNullOrWhiteSpace(mood))
+            {
+                query = query.Where(e => e.PrimaryMood.Equals(mood) || e.SecondaryMoods.Contains(mood));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                query = query.Where(e => e.Tags.Contains(tag));
+            }
+
+            return await query.OrderByDescending(e => e.EntryDate)
                             .Skip(skip)
                             .Take(take)
                             .ToListAsync();
         }
 
-        public async Task<int> GetTotalEntriesCountAsync()
+        public async Task<int> GetTotalEntriesCountAsync(string searchText, DateTime? date, string mood, string tag)
         {
             await InitAsync();
-            return await _database.Table<JournalEntry>().CountAsync();
+            var query = _database.Table<JournalEntry>();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                query = query.Where(e => e.Title.Contains(searchText) || e.Content.Contains(searchText));
+            }
+
+            if (date.HasValue)
+            {
+                var start = date.Value.Date;
+                var end = start.AddDays(1).AddTicks(-1);
+                query = query.Where(e => e.EntryDate >= start && e.EntryDate <= end);
+            }
+
+            if (!string.IsNullOrWhiteSpace(mood))
+            {
+                query = query.Where(e => e.PrimaryMood.Equals(mood) || e.SecondaryMoods.Contains(mood));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                query = query.Where(e => e.Tags.Contains(tag));
+            }
+
+            return await query.CountAsync();
         }
     }
 }
