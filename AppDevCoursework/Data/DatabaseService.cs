@@ -106,5 +106,21 @@ namespace AppDevCoursework.Data
                             .Where(e => e.EntryDate >= start && e.EntryDate <= end)
                             .ToListAsync();
         }
+
+        public async Task<List<JournalEntry>> GetJournalEntriesAsync(int skip, int take)
+        {
+            await InitAsync();
+            return await _database.Table<JournalEntry>()
+                            .OrderByDescending(e => e.EntryDate)
+                            .Skip(skip)
+                            .Take(take)
+                            .ToListAsync();
+        }
+
+        public async Task<int> GetTotalEntriesCountAsync()
+        {
+            await InitAsync();
+            return await _database.Table<JournalEntry>().CountAsync();
+        }
     }
 }
