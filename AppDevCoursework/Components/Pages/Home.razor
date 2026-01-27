@@ -19,6 +19,21 @@
         </div>
     </div>
 
+    <!-- Streak Stats (Simple) -->
+    <div class="d-flex justify-content-center gap-4 mb-4 text-secondary">
+        <div title="Current Streak">
+            <span class="fw-bold">@Stats.CurrentStreak</span> Days Streak
+        </div>
+        <div class="border-start"></div>
+        <div title="Longest Streak">
+            <span class="fw-bold">@Stats.LongestStreak</span> Days Best
+        </div>
+        <div class="border-start"></div>
+        <div title="Total Entries">
+            <span class="fw-bold">@Stats.TotalEntries</span> Entries
+        </div>
+    </div>
+
     @if (IsLoading)
     {
         <div class="text-center">
@@ -154,6 +169,7 @@
 
     private DateTime CurrentDate = DateTime.Today;
     private JournalEntry CurrentEntry = new();
+    private StreakStats Stats = new();
     private bool IsLoading = true;
     private string StatusMessage = "";
     private bool IsPreviewMode = false;
@@ -175,6 +191,7 @@
     protected override async Task OnInitializedAsync()
     {
         SuggestedTags = await DbService.GetTagsAsync();
+        Stats = await DbService.GetStreakStatsAsync();
         
         if (!string.IsNullOrEmpty(DateQuery) && DateTime.TryParse(DateQuery, out DateTime parsedDate))
         {
@@ -261,6 +278,7 @@
         CurrentEntry.Tags = string.Join(",", CurrentTags);
 
         await DbService.SaveEntryAsync(CurrentEntry);
+        Stats = await DbService.GetStreakStatsAsync();
         StatusMessage = "Entry Saved Successfully!";
         
         foreach(var t in CurrentTags)
@@ -272,6 +290,7 @@
                  SuggestedTags.Add(newTag);
             }
         }
+        StateHasChanged();
     }
 
     private async Task DeleteEntryAsync()
@@ -280,8 +299,10 @@
         if (confirmed)
         {
             await DbService.DeleteEntryAsync(CurrentEntry);
+            Stats = await DbService.GetStreakStatsAsync();
             await LoadEntryAsync(); // Reloads (will be empty)
             StatusMessage = "Entry Deleted.";
+            StateHasChanged();
         }
     }
 }

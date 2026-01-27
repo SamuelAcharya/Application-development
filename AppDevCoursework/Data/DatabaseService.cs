@@ -169,5 +169,85 @@ namespace AppDevCoursework.Data
 
             return await query.CountAsync();
         }
+
+        public async Task<StreakStats> GetStreakStatsAsync()
+        {
+            await InitAsync();
+            var entries = await _database.Table<JournalEntry>().ToListAsync();
+            var dates = entries.Select(e => e.EntryDate.Date).Distinct().OrderByDescending(d => d).ToList();
+
+            int currentStreak = 0;
+            int longestStreak = 0;
+            int totalEntries = entries.Count;
+
+            if (dates.Any())
+            {
+                // Calculate Current Streak
+                var today = DateTime.Today;
+                var yesterday = today.AddDays(-1);
+
+                if (dates.Contains(today))
+                {
+                    currentStreak = 1;
+                    var checkDate = today.AddDays(-1);
+                    while (dates.Contains(checkDate))
+                    {
+                        currentStreak++;
+                        checkDate = checkDate.AddDays(-1);
+                    }
+                }
+                else if (dates.Contains(yesterday))
+                {
+                    currentStreak = 1;
+                    var checkDate = yesterday.AddDays(-1);
+                    while (dates.Contains(checkDate))
+                    {
+                        currentStreak++;
+                        checkDate = checkDate.AddDays(-1);
+                    }
+                }
+
+                // Calculate Longest Streak
+                int tempStreak = 0;
+                // Since dates are descending
+                for (int i = 0; i < dates.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        tempStreak = 1;
+                    }
+                    else
+                    {
+                        var prevDate = dates[i - 1];
+                        var currDate = dates[i];
+
+                        if (prevDate.AddDays(-1) == currDate)
+                        {
+                            tempStreak++;
+                        }
+                        else
+                        {
+                            if (tempStreak > longestStreak) longestStreak = tempStreak;
+                            tempStreak = 1;
+                        }
+                    }
+                }
+                if (tempStreak > longestStreak) longestStreak = tempStreak;
+            }
+
+            return new StreakStats
+            {
+                CurrentStreak = currentStreak,
+                LongestStreak = longestStreak,
+                TotalEntries = totalEntries
+            };
+        }
+    }
+
+    public class StreakStats
+    {
+        public int CurrentStreak { get; set; }
+        public int LongestStreak { get; set; }
+        public int TotalEntries { get; set; }
     }
 }
