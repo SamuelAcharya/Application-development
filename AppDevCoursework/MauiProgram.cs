@@ -21,6 +21,7 @@ namespace AppDevCoursework
     		builder.Logging.AddDebug();
 #endif
             builder.Services.AddSingleton<Data.DatabaseService>();
+            builder.Services.AddSingleton<Services.ThemeService>();
 
             return builder.Build();
         }

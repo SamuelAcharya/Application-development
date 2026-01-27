@@ -132,12 +132,13 @@
                         @if (!IsPreviewMode)
                         {
                             <textarea class="form-control" rows="10" 
+                                      style="background-color: var(--bg-card); color: var(--text-body); border-color: var(--border-neutral);"
                                       @bind="CurrentEntry.Content"></textarea>
                             <small class="text-muted">Supported: *Italic*, **Bold**, - List</small>
                         }
                         else
                         {
-                            <div class="border p-3" style="min-height: 200px; background-color: #fafafa;">
+                            <div class="border p-3" style="min-height: 200px; background-color: var(--bg-neutral); color: var(--text-body);">
                                 @((MarkupString)Markdown.ToHtml(CurrentEntry.Content ?? ""))
                             </div>
                         }

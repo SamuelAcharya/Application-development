@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@inject AppDevCoursework.Services.ThemeService ThemeService
+@implements IDisposable
 
-<div class="page">
+<div class="page" data-theme="@(ThemeService.IsDarkMode ? "dark" : "light")">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -15,3 +17,15 @@
         </article>
     </main>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}

@@ -1,12 +1,72 @@
-﻿html,
+﻿:root {
+    /* Light Theme Variables */
+    --bg-body: #F5F1E8;
+    /* Beige Background */
+    --text-body: #333;
+    --bg-sidebar: linear-gradient(180deg, #2E5834 0%, #1e3b22 70%);
+    /* Forest Green Gradient */
+    --text-sidebar: white;
+    --bg-topbar: #E8E4D9;
+    /* Beige Top Bar */
+    --border-topbar: #d6d5d5;
+    --color-primary: #2E5834;
+    /* Forest Green */
+    --color-primary-hover: #1e3b22;
+    --color-link: #2E5834;
+    --bg-card: #fff;
+    --bg-card-header: #E8E4D9;
+    --color-card-header: #2E5834;
+    --border-card: #ccc;
+    --bg-neutral: #fafafa;
+    --bg-filter: #f8f9fa;
+    --border-neutral: #dee2e6;
+    --bg-danger: #5400d2;
+    /* Earthy Rust Red (actually purple based on hex) */
+    --bg-danger-hover: #4805ad;
+    --text-danger: white;
+    --text-on-primary: white;
+}
+
+[data-theme="dark"] {
+    /* Dark Theme Variables */
+    --bg-body: #121212;
+    --text-body: #e0e0e0;
+    --bg-sidebar: linear-gradient(180deg, #1a331d 0%, #0f1f11 70%);
+    --text-sidebar: #e0e0e0;
+    --bg-topbar: #1e1e1e;
+    --border-topbar: #333;
+    --color-primary: #81C784;
+    /* Lighter Green for Dark Mode */
+    --color-primary-hover: #66BB6A;
+    --color-link: #81C784;
+    --bg-card: #1e1e1e;
+    --bg-card-header: #2c2c2c;
+    --color-card-header: #81C784;
+    --border-card: #333;
+    --bg-neutral: #2c2c2c;
+    --bg-filter: #1e1e1e;
+    --border-neutral: #444;
+    --bg-danger: #7e3ff2;
+    --bg-danger-hover: #5400d2;
+    --text-danger: white;
+    --text-on-primary: black;
+}
+
+html,
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    /* Move background/color to .page to allow theming via wrapper */
 }
 
 .page {
     position: relative;
     display: flex;
     flex-direction: column;
+    background-color: var(--bg-body);
+    color: var(--text-body);
+    min-height: 100vh;
 }
 
 main {
@@ -15,21 +75,18 @@ main {
 
 /* Sidebar Styling */
 .sidebar {
-    background-image: linear-gradient(180deg, #2E5834 0%, #1e3b22 70%);
-    /* Forest Green Gradient */
-    color: white;
+    background-image: var(--bg-sidebar);
+    color: var(--text-sidebar);
 }
 
 /* Top Bar Styling */
 .top-row {
-    background-color: #E8E4D9;
-    /* Beige Top Bar */
-    border-bottom: 1px solid #d6d5d5;
+    background-color: var(--bg-topbar);
+    border-bottom: 1px solid var(--border-topbar);
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
     align-items: center;
-    /* CRITICAL: Ensure Top Bar is always on top */
     position: sticky;
     top: 0;
     z-index: 2000;
@@ -40,7 +97,7 @@ main {
     white-space: nowrap;
     margin-left: 1.5rem;
     text-decoration: none;
-    color: #2E5834;
+    color: var(--color-link);
 }
 
 .top-row ::deep a:hover,
@@ -51,7 +108,6 @@ main {
 /* Content Area */
 .content {
     padding-top: 1.1rem;
-
     position: relative;
     z-index: 0;
 }
@@ -90,12 +146,6 @@ main {
     }
 }
 
-body {
-    background-color: #F5F1E8;
-    /* Beige Background */
-    color: #333;
-}
-
 /* Headings */
 h1,
 h2,
@@ -103,60 +153,66 @@ h3,
 h4,
 h5,
 h6 {
-    color: #2E5834;
+    color: var(--color-primary);
 }
 
 a {
-    color: #2E5834;
+    color: var(--color-link);
 }
 
 /* Buttons */
 .btn-primary {
-    background-color: #2E5834;
-    border-color: #2E5834;
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--text-on-primary);
+}
+
+/* Specific override for text color in dark mode if primary is light */
+[data-theme="dark"] .btn-primary {
+    color: var(--text-on-primary);
 }
 
 .btn-primary:hover {
-    background-color: #1e3b22;
-    border-color: #1e3b22;
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
 }
 
 .btn-outline-primary {
-    color: #2E5834;
-    border-color: #2E5834;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 .btn-outline-primary:hover {
-    background-color: #2E5834;
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--bg-body);
+    /* Inverts nicely */
 }
 
-/* Custom Delete Button (Rust Red) */
+/* Custom Delete Button */
 .btn-danger {
-    background-color: #5400d2;
-    /* Earthy Rust Red */
-    border-color: #5400d2;
-    color: white;
+    background-color: var(--bg-danger);
+    border-color: var(--bg-danger);
+    color: var(--text-danger);
 }
 
 .btn-danger:hover {
-    background-color: #4805ad;
-    border-color: #4805ad;
+    background-color: var(--bg-danger-hover);
+    border-color: var(--bg-danger-hover);
 }
 
 /* Cards */
 .card {
-    border: 1px solid #ccc;
-    background-color: #fff;
+    border: 1px solid var(--border-card);
+    background-color: var(--bg-card);
     margin-bottom: 20px;
     border-radius: 8px;
 }
 
 .card-header {
-    background-color: #E8E4D9;
-    color: #2E5834;
+    background-color: var(--bg-card-header);
+    color: var(--color-card-header);
     font-weight: bold;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid var(--border-card);
 }
 
 /* Blazor Error UI */
